@@ -9,3 +9,20 @@ author:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Front Matter
+```{r, message = FALSE}
+# Libraries
+
+```
+
+```{r}
+# data
+```
+
+# Generalized Linear Modeling
+
+# Multilevel Modeling
+
+# Machine Learning
+
+# Code Appendix
