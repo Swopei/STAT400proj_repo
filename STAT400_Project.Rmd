@@ -3,9 +3,7 @@ title: "STAT400_Project"
 author:
 - name: Isaac Swope
 - name: Benjamin Howland
-date: "2026-03-25"
-output: html_document
----
+=======
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
