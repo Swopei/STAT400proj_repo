@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # data
+Limn_raw <- read.csv("https://raw.githubusercontent.com/Swopei/STAT400proj_repo/refs/heads/main/Data/observations-699760.csv")
 ```
 
 # Generalized Linear Modeling
