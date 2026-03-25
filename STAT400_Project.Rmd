@@ -9,3 +9,21 @@ author:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Front Matter
+```{r, message = FALSE}
+# Libraries
+
+```
+
+```{r}
+# data
+Limn_raw <- read.csv("https://raw.githubusercontent.com/Swopei/STAT400proj_repo/refs/heads/main/Data/observations-699760.csv")
+```
+
+# Generalized Linear Modeling
+
+# Multilevel Modeling
+
+# Machine Learning
+
+# Code Appendix
