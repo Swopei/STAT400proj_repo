@@ -1,6 +1,6 @@
-Exported at 2026-03-25T21:17:59Z
+Exported at 2026-03-26T17:31:31Z
 
-Query: quality_grade=any&identifications=any&taxon_id=51337&verifiable=true&spam=false
+Query: quality_grade=any&identifications=any&taxon_id=53930&verifiable=true&spam=false
 
 Columns:
 id: Unique, sequential identifier for the observation
@@ -50,10 +50,8 @@ common_name: Common or vernacular name of the observed taxon according to iNatur
 iconic_taxon_name: Higher-level taxonomic category for the observed taxon
 taxon_id: Unique, sequential identifier for the observed taxon
 taxon_family_name: Name of the taxonomic family containing the observed taxon
-taxon_tribe_name: Name of the taxonomic tribe containing the observed taxon
 taxon_genus_name: Name of the taxonomic genus containing the observed taxon
 taxon_species_name: Name of the taxonomic species containing the observed taxon
-taxon_subspecies_name: Name of the taxonomic subspecies containing the observed taxon
 
 For more information about column headers, see https://www.inaturalist.org/terminology
 
