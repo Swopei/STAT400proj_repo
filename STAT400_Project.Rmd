@@ -51,6 +51,7 @@ kable(Limnanth_freq)
 
 
 ```{r}
+
 species_palette <- colorFactor(palette = "Set1", domain = Limnanth_raw$scientific_name)
 
 leaflet(Limnanth) %>%
