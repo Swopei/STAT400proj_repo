@@ -11,16 +11,70 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Front Matter
 ```{r, message = FALSE}
+rm(list = ls())
 # Libraries
+library(tidyverse)
+library(kableExtra)
+library(leaflet)
+library(caret)
+library(stringr)
+library(randomForest)
 
 ```
 
 ```{r}
 # data
-Limn_raw <- read.csv("https://raw.githubusercontent.com/Swopei/STAT400proj_repo/refs/heads/main/Data/observations-699760.csv")
+Limnanth_raw <- read.csv("https://raw.githubusercontent.com/Swopei/STAT400proj_repo/refs/heads/main/Data/observations-699760.csv")
 ```
 
+
 # Generalized Linear Modeling
+
+## Exploratory Data Analysis
+
+
+
+```{r}
+Limnanth <- Limnanth_raw %>%
+  filter(place_country_name == "United States",
+         quality_grade == "research",
+         taxon_species_name != "")
+
+Limnanth_freq <- Limnanth %>%
+  group_by(taxon_species_name) %>%
+  summarise(
+    count = n()
+  )
+
+kable(Limnanth_freq)
+```
+
+
+```{r}
+species_palette <- colorFactor(palette = "Set1", domain = Limnanth_raw$scientific_name)
+
+leaflet(Limnanth) %>%
+  addProviderTiles(providers$Esri.WorldImagery) %>% 
+  #addTiles() %>%
+  addCircleMarkers(
+    lng = ~longitude, 
+    lat = ~latitude,
+    color = ~species_palette(taxon_species_name),
+    radius = 4,
+    fillOpacity = 0.95,
+    stroke = FALSE,
+    popup = ~paste("<b>Species:</b>", taxon_species_name)
+  ) %>%
+  addLegend(
+    pal = species_palette, 
+    values = ~taxon_species_name, 
+    title = "Species",
+    position = "bottomright"
+  )
+```
+
+
+
 
 # Multilevel Modeling
 
