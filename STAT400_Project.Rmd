@@ -28,10 +28,7 @@ Diap_raw <- read.csv("https://raw.githubusercontent.com/Swopei/STAT400proj_repo/
 ```
 
 
-
-# Generalized Linear Modeling
-
-## Exploratory Data Analysis
+# Exploratory Data Analysis
 
 
 
@@ -85,7 +82,7 @@ leaflet(Diap) %>%
 ```
 
 
-
+# Generalized Linear Modeling
 
 # Multilevel Modeling
 
