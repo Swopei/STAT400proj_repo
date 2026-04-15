@@ -30,8 +30,6 @@ Diap_raw <- read.csv("https://raw.githubusercontent.com/Swopei/STAT400proj_repo/
 
 # Exploratory Data Analysis
 
-
-
 ```{r}
 Diap <- Diap_raw %>%
   filter(quality_grade == "research",
@@ -47,6 +45,8 @@ Diap <- Diap_raw %>%
   filter(n() >= 10) %>%
   ungroup()
 
+Diap <- droplevels(Diap)
+
 Diap_freq <- Diap %>%
   group_by(taxon_species_name) %>%
   summarise(
@@ -54,6 +54,47 @@ Diap_freq <- Diap %>%
   )
 
 kable(Diap_freq)
+```
+
+```{r}
+ggplot(data = Diap_freq,
+       mapping = aes(x = reorder(taxon_species_name, count), y = count)) +
+  geom_segment(aes(x = reorder(taxon_species_name, count), xend = reorder(taxon_species_name, count), 
+                   y = 0, yend = count), 
+               color = "forestgreen") +
+  geom_point(color = "black") +
+  scale_y_continuous(breaks = seq(0, 10000, by = 1000)) +
+  coord_flip() +
+  theme_minimal() +
+  labs(x = "Species", y = "Count", title = "Species by Identified Observations")
+```
+
+```{r}
+
+Diap_month <- Diap %>%
+  group_by(month, taxon_species_name) %>%
+  summarize(total = n())
+
+label_radius <- max(Diap_month$total)*1.5
+
+ggplot(data = Diap_month, 
+       mapping = aes(x = month, y = total, fill = taxon_species_name)) +
+  geom_bar(stat = "identity", width = 1, color = "white") + 
+  # Add labels at a constant Y (radius)
+  geom_text(aes(y = label_radius, label = month), 
+            size = 4, 
+            fontface = "bold") +
+  coord_polar(start = 0) + 
+  # Ensure the Y scale accommodates the labels so they don't get cut off
+  scale_y_continuous(limits = c(0, label_radius * 1.1), expand = c(0, 0)) +
+  theme_minimal() +
+  labs(title = "Monthly Totals", x = "", y = "") +
+  theme(
+    panel.grid = element_blank(), 
+    axis.text.x = element_blank(), 
+    axis.text.y = element_blank(), 
+    axis.ticks = element_blank()
+  )
 ```
 
 
