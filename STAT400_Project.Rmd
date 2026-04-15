@@ -19,6 +19,8 @@ library(leaflet)
 library(caret)
 library(stringr)
 library(randomForest)
+library(nnet)
+library(mclogit)
 
 ```
 
@@ -75,17 +77,18 @@ Diap_month <- Diap %>%
   group_by(month, taxon_species_name) %>%
   summarize(total = n())
 
+Diap_month$month_abb <- month.abb[Diap_month$month]
+Diap_month$month_abb <- factor(Diap_month$month_abb, levels = month.abb)
+
 label_radius <- max(Diap_month$total)*1.5
 
 ggplot(data = Diap_month, 
-       mapping = aes(x = month, y = total, fill = taxon_species_name)) +
+       mapping = aes(x = month_abb, y = total, fill = taxon_species_name)) +
   geom_bar(stat = "identity", width = 1, color = "white") + 
-  # Add labels at a constant Y (radius)
-  geom_text(aes(y = label_radius, label = month), 
+  geom_text(aes(y = label_radius, label = month_abb), 
             size = 4, 
             fontface = "bold") +
   coord_polar(start = 0) + 
-  # Ensure the Y scale accommodates the labels so they don't get cut off
   scale_y_continuous(limits = c(0, label_radius * 1.1), expand = c(0, 0)) +
   theme_minimal() +
   labs(title = "Monthly Totals", x = "", y = "") +
@@ -124,6 +127,43 @@ leaflet(Diap) %>%
 
 
 # Generalized Linear Modeling
+```{r}
+set.seed(40)
+train_ind <- sample(1:nrow(Diap), floor(0.8*nrow(Diap)))
+set.seed(NULL)
+
+DiapTrain <- Diap[train_ind, ]
+DiapTest <- Diap[-train_ind, ]
+```
+
+```{r}
+Diap_glm <- multinom(taxon_species_name ~ (scale(latitude) * scale(longitude)) +
+                             I(scale(latitude))^2 + I(scale(longitude))^2 +
+                             cos_month + sin_month, 
+                          data = DiapTrain)
+Diap_glm_preds <- predict(Diap_glm, DiapTest)
+conf_mat_glm <- confusionMatrix(Diap_glm_preds, DiapTest$taxon_species_name)
+```
+
+```{r}
+conf_df_glm <- as.data.frame(conf_mat_glm$table)
+conf_df_glm$Reference <- gsub("^([A-Z])[a-z]+", "\\1.", conf_df_glm$Reference)
+conf_df_glm$Prediction <- gsub("^([A-Z])[a-z]+", "\\1.", conf_df_glm$Prediction)
+
+
+ggplot(conf_df_glm, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), color = "white") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  theme(
+    axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1, size = 10)
+  ) +
+  labs(title = "Species Classification Heatmap",
+       x = "Actual Species",
+       y = "Predicted Species")
+```
+
+
 
 # Multilevel Modeling
 
