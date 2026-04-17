@@ -3,7 +3,7 @@ title: "STAT400_Project"
 author:
 - name: Isaac Swope
 - name: Benjamin Howland
-=======
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -128,6 +128,33 @@ leaflet(Diap) %>%
 
 # Generalized Linear Modeling
 ```{r}
+m1 <- multinom(taxon_species_name ~ latitude + longitude + sin_month + cos_month, data = Diap)
+
+m2 <- multinom(taxon_species_name ~ latitude * longitude + sin_month + cos_month, data = Diap)
+
+m3 <- multinom(taxon_species_name ~ latitude + longitude + I(latitude^2) + I(longitude^2) + sin_month + cos_month, data = Diap)
+
+AIC(m1, m2, m3)
+
+pred1 <- predict(m1, Diap)
+pred2 <- predict(m2, Diap)
+pred3 <- predict(m3, Diap)
+
+acc1 <- mean(pred1 == Diap$taxon_species_name)
+acc2 <- mean(pred2 == Diap$taxon_species_name)
+acc3 <- mean(pred3 == Diap$taxon_species_name)
+
+results <- data.frame(
+  Model = c("Additive", "Lat × Long", "Nonlinear Space"),
+  AIC = c(AIC(m1), AIC(m2), AIC(m3)),
+  Accuracy = c(acc1, acc2, acc3)
+)
+
+print(results)
+```
+
+
+```{r}
 set.seed(40)
 train_ind <- sample(1:nrow(Diap), floor(0.8*nrow(Diap)))
 set.seed(NULL)
@@ -137,9 +164,8 @@ DiapTest <- Diap[-train_ind, ]
 ```
 
 ```{r}
-Diap_glm <- multinom(taxon_species_name ~ latitude * longitude + 
-                       cos_month + sin_month, 
-                     data = DiapTrain)
+Diap_glm <- multinom(taxon_species_name ~ latitude + longitude + I(latitude^2) + I(longitude^2) + cos_month + sin_month, data = DiapTrain)
+
 Diap_glm_preds <- predict(Diap_glm, DiapTest)
 conf_mat_glm <- confusionMatrix(Diap_glm_preds, DiapTest$taxon_species_name)
 ```
@@ -160,6 +186,7 @@ ggplot(conf_df_glm, aes(x = Reference, y = Prediction, fill = Freq)) +
   labs(title = "Species Classification Heatmap",
        x = "Actual Species",
        y = "Predicted Species")
+
 ```
 
 ```{r}
@@ -183,3 +210,5 @@ print(paste("Kappa:", round(conf_mat_glm$overall['Kappa'], 4)))
 # Machine Learning
 
 # Code Appendix
+
+
