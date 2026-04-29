@@ -3,13 +3,16 @@ title: "STAT400_Project"
 author:
 - name: Isaac Swope
 - name: Benjamin Howland
-=======
+date: "2026-4-29"
+output: html_document
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Front Matter
+
 ```{r, message = FALSE}
 rm(list = ls())
 # Libraries
@@ -21,6 +24,7 @@ library(stringr)
 library(randomForest)
 library(nnet)
 library(mclogit)
+library(patchwork)
 
 ```
 
@@ -58,12 +62,6 @@ Diap_freq <- Diap %>%
 
 kable(Diap_freq)
 ```
-
-```{r}
-levels(as.factor(Diap_raw$taxon_genus_name))
-levels(as.factor(Diap_raw$taxon_species_name))
-```
-
 
 
 ```{r}
@@ -120,7 +118,7 @@ ggplot(data = Diap_month,
   coord_polar(start = 0) + 
   scale_y_continuous(limits = c(0, label_radius * 1.1), expand = c(0, 0)) +
   theme_minimal() +
-  labs(title = "Monthly Totals", x = "", y = "") +
+  labs(title = "Monthly Totals of Diapensciaceae Observations", x = "", y = "") +
   theme(
     panel.grid = element_blank(), 
     axis.text.x = element_blank(), 
@@ -156,7 +154,10 @@ leaflet(Diap) %>%
 
 
 # Generalized Linear Modeling
+
 ```{r}
+# Testing / Training Split
+
 set.seed(40)
 train_ind <- sample(1:nrow(Diap), floor(0.8*nrow(Diap)))
 set.seed(NULL)
@@ -186,7 +187,7 @@ ggplot(conf_df_glm, aes(x = Reference, y = Prediction, fill = Freq)) +
   theme(
     axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1, size = 10)
   ) +
-  labs(title = "Species Classification Heatmap",
+  labs(title = "Species Classification Confusion Matrix",
        x = "Actual Species",
        y = "Predicted Species")
 ```
@@ -209,6 +210,61 @@ print(paste("Kappa:", round(conf_mat_glm$overall['Kappa'], 4)))
 
 # Multilevel Modeling
 
+
 # Machine Learning
 
-# Code Appendix
+```{r}
+# Testing / Training Split
+
+set.seed(40)
+train_ind <- sample(1:nrow(Diap), floor(0.8*nrow(Diap)))
+set.seed(NULL)
+
+DiapTrain <- Diap[train_ind, ]
+DiapTest <- Diap[-train_ind, ]
+```
+
+```{r}
+Diap.rf <- randomForest(taxon_species_name ~ latitude + longitude + cos_month + sin_month, data = DiapTrain)
+Diap.rf_preds <- predict(Diap.rf, DiapTest)
+conf_mat_rf <- confusionMatrix(Diap.rf_preds, DiapTest$taxon_species_name)
+```
+
+```{r}
+conf_df_rf <- as.data.frame(conf_mat_rf$table)
+conf_df_rf$Reference <- gsub("^([A-Z])[a-z]+", "\\1.", conf_df_rf$Reference)
+conf_df_rf$Prediction <- gsub("^([A-Z])[a-z]+", "\\1.", conf_df_rf$Prediction)
+
+
+ggplot(conf_df_rf, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), color = "white") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  theme(
+    axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1, size = 10)
+  ) +
+  labs(title = "Species Classification Confusion Matrix",
+       x = "Actual Species",
+       y = "Predicted Species")
+```
+
+```{r}
+# Get F1 score for each
+f1_scores_rf <- conf_mat_rf$byClass[, "F1"]
+
+# Get the Macro-F1 
+macro_f1_rf <- mean(f1_scores_rf, na.rm = TRUE)
+print(paste("Macro-F1 Score:", round(macro_f1_rf, 4)))
+
+# Accuracy
+print(paste("Accuracy:", round(conf_mat_rf$overall['Accuracy'], 4)))
+
+#Kappa 
+print(paste("Kappa:", round(conf_mat_rf$overall['Kappa'], 4)))
+```
+
+```{r}
+varImpPlot(Diap.rf)
+```
+
+
