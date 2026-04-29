@@ -3,7 +3,7 @@ title: "STAT400_Project"
 author:
 - name: Isaac Swope
 - name: Benjamin Howland
-=======
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -21,7 +21,7 @@ library(stringr)
 library(randomForest)
 library(nnet)
 library(mclogit)
-
+library(MLmetrics)
 ```
 
 ```{r}
@@ -157,6 +157,59 @@ leaflet(Diap) %>%
 
 # Generalized Linear Modeling
 ```{r}
+model1 <- multinom(taxon_species_name ~ latitude + longitude + cos_month + sin_month, data = Diap)
+model2 <- multinom(taxon_species_name ~ latitude * longitude + cos_month + sin_month, data = Diap)
+model3 <- multinom(taxon_species_name ~ latitude + longitude + I(latitude^2) + I(longitude^2) + cos_month + sin_month, data = Diap)
+model4 <- multinom(taxon_species_name ~ latitude * longitude + I(latitude^2) + I(longitude^2) + cos_month + sin_month, data = Diap)
+
+pred1 <- predict(model1)
+pred2 <- predict(model2)
+pred3 <- predict(model3)
+pred4 <- predict(model4)
+
+y <- Diap$taxon_species_name
+classes <- unique(y)
+
+# Model 1
+acc1 <- mean(pred1 == y)
+f1_1 <- mean(sapply(classes, function(cl) {
+  F1_Score(pred1 == cl, y == cl)
+}), na.rm = TRUE)
+aic1 <- AIC(model1)
+
+# Model 2
+acc2 <- mean(pred2 == y)
+f1_2 <- mean(sapply(classes, function(cl) {
+  F1_Score(pred2 == cl, y == cl)
+}), na.rm = TRUE)
+aic2 <- AIC(model2)
+
+# Model 3
+acc3 <- mean(pred3 == y)
+f1_3 <- mean(sapply(classes, function(cl) {
+  F1_Score(pred3 == cl, y == cl)
+}), na.rm = TRUE)
+aic3 <- AIC(model3)
+
+# Model 4
+acc4 <- mean(pred4 == y)
+f1_4 <- mean(sapply(classes, function(cl) {
+  F1_Score(pred4 == cl, y == cl)
+}), na.rm = TRUE)
+aic4 <- AIC(model4)
+
+results <- data.frame(
+  Model = c("Model 1", "Model 2", "Model 3", "Model 4"),
+  AIC = c(aic1, aic2, aic3, aic4),
+  Accuracy = c(acc1, acc2, acc3, acc4),
+  Macro_F1 = c(f1_1, f1_2, f1_3, f1_4)
+)
+
+print(results)
+```
+
+
+```{r}
 set.seed(40)
 train_ind <- sample(1:nrow(Diap), floor(0.8*nrow(Diap)))
 set.seed(NULL)
@@ -166,9 +219,7 @@ DiapTest <- Diap[-train_ind, ]
 ```
 
 ```{r}
-Diap_glm <- multinom(taxon_species_name ~ latitude * longitude + 
-                       cos_month + sin_month, 
-                     data = DiapTrain)
+Diap_glm <- multinom(taxon_species_name ~ latitude * longitude + I(latitude^2) + I(longitude^2) + cos_month + sin_month, data = DiapTrain)
 Diap_glm_preds <- predict(Diap_glm, DiapTest)
 conf_mat_glm <- confusionMatrix(Diap_glm_preds, DiapTest$taxon_species_name)
 ```
