@@ -53,10 +53,18 @@ Diap_freq <- Diap %>%
   group_by(taxon_species_name) %>%
   summarise(
     count = n()
-  )
+  ) %>%
+  arrange(desc(count))
 
 kable(Diap_freq)
 ```
+
+```{r}
+levels(as.factor(Diap_raw$taxon_genus_name))
+levels(as.factor(Diap_raw$taxon_species_name))
+```
+
+
 
 ```{r}
 ggplot(data = Diap_freq,
@@ -70,6 +78,27 @@ ggplot(data = Diap_freq,
   theme_minimal() +
   labs(x = "Species", y = "Count", title = "Species by Identified Observations")
 ```
+
+
+```{r}
+ggplot(data = Diap,
+       mapping = aes(x = latitude, fill = taxon_species_name)) + 
+  geom_histogram(binwidth = 0.25) +
+  theme_minimal() +
+  coord_flip() +
+  labs(x = "Latitiude", y = "Count", fill = "Species")
+```
+
+```{r}
+ggplot(data = Diap,
+       mapping = aes(x = longitude, fill = taxon_species_name)) + 
+  geom_histogram(binwidth = 1) +
+  theme_minimal() +
+  labs(x = "Longitude", y = "Count", fill = "Species")
+```
+
+
+
 
 ```{r}
 
