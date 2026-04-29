@@ -1,9 +1,9 @@
 ---
 title: "STAT400_Project"
-author: "Isaac Swope"
-date: "2026-03-25"
-output: html_document
----
+author:
+- name: Isaac Swope
+- name: Benjamin Howland
+=======
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
