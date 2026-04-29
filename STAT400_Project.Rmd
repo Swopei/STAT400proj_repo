@@ -260,6 +260,14 @@ print(paste("Kappa:", round(conf_mat_glm$overall['Kappa'], 4)))
 
 # Multilevel Modeling
 
+```{r}
+Diap_mblogit <- mblogit(taxon_species_name ~ latitude * longitude + cos_month + sin_month, 
+                        random = ~ 1 | taxon_genus_name, 
+                        data = DiapTrain)
+```
+
+
+
 
 # Machine Learning
 
