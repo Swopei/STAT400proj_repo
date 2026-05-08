@@ -52,6 +52,7 @@ Diap <- Diap_raw %>%
   ungroup()
 
 Diap <- droplevels(Diap)
+Diap$taxon_genus_name <- as.factor(Diap$taxon_genus_name)
 
 Diap_freq <- Diap %>%
   group_by(taxon_species_name) %>%
@@ -173,6 +174,7 @@ classes <- unique(y)
 acc1 <- mean(pred1 == y)
 f1_1 <- mean(sapply(classes, function(cl) {
   F1_Score(pred1 == cl, y == cl)
+  
 }), na.rm = TRUE)
 aic1 <- AIC(model1)
 
@@ -261,12 +263,75 @@ print(paste("Kappa:", round(conf_mat_glm$overall['Kappa'], 4)))
 # Multilevel Modeling
 
 ```{r}
-Diap_mblogit <- mblogit(taxon_species_name ~ latitude * longitude + cos_month + sin_month, 
+# Genera with only one species must be removed from the data in order for genus to be a random effect
+# Since Galax has only one species it is removed
+
+
+DiapTrain <- DiapTrain %>%
+  filter(taxon_genus_name != "Galax") %>%
+  mutate(
+    taxon_genus_name = droplevels(as.factor(taxon_genus_name)),
+    lat_scaled = as.numeric(scale(latitude)),
+    long_scaled = as.numeric(scale(longitude))
+  )
+
+DiapTest <- DiapTest %>%
+  filter(taxon_genus_name != "Galax") %>%
+  mutate(
+    taxon_genus_name = droplevels(as.factor(taxon_genus_name)),
+    lat_scaled = as.numeric(scale(latitude)),
+    long_scaled = as.numeric(scale(longitude))
+  )
+
+DiapTrain <- DiapTrain %>%
+  mutate(
+    lat_scaled = as.numeric(scale(latitude)),
+    long_scaled = as.numeric(scale(longitude))
+  )
+
+Diap_mblogit <- mblogit(taxon_species_name ~ lat_scaled * long_scaled + cos_month + sin_month, 
                         random = ~ 1 | taxon_genus_name, 
                         data = DiapTrain)
+
+probs <- predict(Diap_mblogit, newdata = DiapTest)
+pred_classes <- colnames(probs)[max.col(probs)]
+Diap_mblogit_preds <- factor(pred_classes, levels = levels(DiapTest$taxon_species_name))
+conf_mat_mblogit <- confusionMatrix(Diap_mblogit_preds, DiapTest$taxon_species_name)
+
 ```
 
+```{r}
+conf_df_mblogit <- as.data.frame(conf_mat_mblogit$table)
+conf_df_mblogit$Reference <- gsub("^([A-Z])[a-z]+", "\\1.", conf_df_mblogit$Reference)
+conf_df_mblogit$Prediction <- gsub("^([A-Z])[a-z]+", "\\1.", conf_df_mblogit$Prediction)
 
+
+ggplot(conf_df_mblogit, aes(x = Reference, y = Prediction, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), color = "white") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  theme(
+    axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1, size = 10)
+  ) +
+  labs(title = "Species Classification Confusion Matrix",
+       x = "Actual Species",
+       y = "Predicted Species")
+```
+
+```{r}
+# Get F1 score for each
+f1_scores_mblogit <- conf_mat_mblogit$byClass[, "F1"]
+
+# Get the Macro-F1 
+macro_f1_mblogit <- mean(f1_scores_mblogit, na.rm = TRUE)
+print(paste("Macro-F1 Score:", round(macro_f1_rf, 4)))
+
+# Accuracy
+print(paste("Accuracy:", round(conf_mat_mblogit$overall['Accuracy'], 4)))
+
+#Kappa 
+print(paste("Kappa:", round(conf_mat_mblogit$overall['Kappa'], 4)))
+```
 
 
 # Machine Learning
